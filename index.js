@@ -72,12 +72,12 @@ Local clients:
 
 (async () => {
     [
-        { client: "Localhost", url: "http://127.0.0.1:8545/" },
+        // { client: "Localhost", url: "http://127.0.0.1:8545/" },
         // Mainnet
-        // { client: "Llama", url: "https://eth.llamarpc.com" },
-        // { client: "blxrbdn", url: "https://virginia.rpc.blxrbdn.com" },
-        // { client: "Ankr", url: "https://rpc.ankr.com/eth" },
-        // { client: "Alchemy", url: "https://eth-mainnet.g.alchemy.com/v2/demo" },
+        { client: "Llama", url: "https://eth.llamarpc.com" },
+        { client: "blxrbdn", url: "https://virginia.rpc.blxrbdn.com" },
+        { client: "Ankr", url: "https://rpc.ankr.com/eth" },
+        { client: "Alchemy", url: "https://eth-mainnet.g.alchemy.com/v2/demo" },
         // Gnosis
         // { client: "Official", url: "https://rpc.gnosischain.com/" },
         // { client: "Gateway", url: "https://rpc.gnosis.gateway.fm" },
@@ -86,17 +86,24 @@ Local clients:
         // { client: "Pokt", url: "https://gnosischain-rpc.gateway.pokt.network" },
         // { client: "Ankr", url: "https://rpc.ankr.com/gnosis" }
     ].forEach(async ({ client, url }) => {
-        await estimateGas(client, url)
+        let version = await clientVersion(url);
+        let estimation = await estimateGas(url, testMainnet);
+
+        console.log(`Client '${client}-${version}' estimated '${estimation}'`);
     });
 })();
 
-async function estimateGas(client, url) {
-    let cvResponse = await ethers.utils.fetchJson(url, `{ "id": 42, "jsonrpc": "2.0", "method": "web3_clientVersion", "params": [] }`);
-    let estimationResponse = await ethers.utils.fetchJson(url, `{ "id": 42, "jsonrpc": "2.0", "method": "eth_estimateGas", "params": [${JSON.stringify(testMainnet)}] }`);
-    console.log(estimationResponse);
+async function clientVersion(url) {
+    let { result } = await ethers.utils.fetchJson(url, `{ "id": 42, "jsonrpc": "2.0", "method": "web3_clientVersion", "params": [] }`);
+    return result;
+}
 
-    let clientVersion = cvResponse.result
-    let estimation = parseInt(estimationResponse.result, 16);
-    console.log(`Client '${client}-${clientVersion}' estimated '${estimation}'`);
+async function estimateGas(url, body) {
+    let response = await ethers.utils.fetchJson(url, `{ "id": 42, "jsonrpc": "2.0", "method": "eth_estimateGas", "params": [${JSON.stringify(body)}] }`);
+    console.log(response);
+
+    let estimation = parseInt(response.result, 16);
+
+    return estimation;
 }
 
