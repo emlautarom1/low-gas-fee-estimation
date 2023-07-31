@@ -27,9 +27,12 @@ Following tests uses a valid transaction:
 let testMainnet = {
     "from": "0x9D055dd23de15114EC95921208c741873eDE8558",
     "to": "0xe74Bc1C4C27284ab7DbcF55f71FCc04b832FC32C",
-    "gas": "0xFFFFFF",
     "data": "0x73053410000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000342f697066732f516d61624763754354786a57637a6b766f323977616d69355057435372514435656e744c62717a7a55486b79566f000000000000000000000000",
 };
+
+function withGas(req, gas) {
+    return { ...req, "gas": gas }
+}
 
 /*
 Issue: https://github.com/NethermindEth/nethermind/issues/5637
@@ -74,10 +77,10 @@ Local clients:
     [
         { client: "Localhost", url: "http://127.0.0.1:8545/" },
         // Mainnet
-        { client: "Llama", url: "https://eth.llamarpc.com" },
-        { client: "blxrbdn", url: "https://virginia.rpc.blxrbdn.com" },
-        { client: "Ankr", url: "https://rpc.ankr.com/eth" },
-        { client: "Alchemy", url: "https://eth-mainnet.g.alchemy.com/v2/demo" },
+        // { client: "Llama", url: "https://eth.llamarpc.com" },
+        // { client: "blxrbdn", url: "https://virginia.rpc.blxrbdn.com" },
+        // { client: "Ankr", url: "https://rpc.ankr.com/eth" },
+        // { client: "Alchemy", url: "https://eth-mainnet.g.alchemy.com/v2/demo" },
         // Gnosis
         // { client: "Official", url: "https://rpc.gnosischain.com/" },
         // { client: "Gateway", url: "https://rpc.gnosis.gateway.fm" },
@@ -87,7 +90,16 @@ Local clients:
         // { client: "Ankr", url: "https://rpc.ankr.com/gnosis" }
     ].forEach(async ({ client, url }) => {
         let version = await clientVersion(url);
-        let estimation = await estimateGas(url, testMainnet);
+        /*
+        DEFAULT = 0x5f5e100
+
+        0xFFFFFF    => 217470
+        0x1c9c380   => 217470
+        0x1c9c381   => 216894
+        0x5f5e100   => 216894
+        (DEFAULT)   => 216894
+        */
+        let estimation = await estimateGas(url, withGas(testMainnet, "0x1c9c380"));
 
         console.log(`Client '${client}-${version}' estimated '${estimation}'`);
     });
